@@ -95,17 +95,17 @@ export default function App() {
           payload.insta_reel = formData.insta_reel;
           break;
         case "scrapbook":
-          endpoint = "/scrapbooks";
+          endpoint = "/scrapbook";
           payload.video_link = formData.video_link;
           payload.insta_reel = formData.insta_reel;
           break;
         case "coinbox":
-          endpoint = "/coinboxes"; // Adjust API endpoint as needed
+          endpoint = "/coin"; // Adjust API endpoint as needed
           payload.video_link = formData.video_link;
           payload.insta_reel = formData.insta_reel;
           break;
         case "gaddibox":
-          endpoint = "/gaddiboxes"; // Adjust API endpoint as needed
+          endpoint = "/gaddi"; // Adjust API endpoint as needed
           payload.video_link = formData.video_link;
           payload.insta_reel = formData.insta_reel;
           break;
@@ -115,7 +115,7 @@ export default function App() {
           payload.insta_reel = formData.insta_reel;
           break;
         case "workshop":
-          endpoint = "/workshops";
+          endpoint = "/workshop";
           payload.date = formData.date;
           payload.time = formData.time;
           payload.locationName = formData.locationName;
