@@ -115,7 +115,7 @@ export default function App() {
           payload.insta_reel = formData.insta_reel;
           break;
         case "workshop":
-          endpoint = "/workshop";
+          endpoint = "/workshops";
           payload.date = formData.date;
           payload.time = formData.time;
           payload.locationName = formData.locationName;
