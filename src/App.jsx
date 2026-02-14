@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+/* eslint-disable no-unused-vars */
+import React, { useState, useEffect } from "react";
 
 // --- CONFIGURATION ---
 const API_BASE_URL =
@@ -50,6 +51,28 @@ export default function App() {
   const isWorkshop = modelType === "workshop";
   const isEnvelope = modelType === "envelope";
   const isProduct = !isWorkshop;
+
+  // --- KEEP ALIVE MECHANISM (Pings every 14 mins) ---
+  useEffect(() => {
+    const pingBackend = async () => {
+      try {
+        await fetch(API_BASE_URL);
+        console.log("Pinged backend to keep alive");
+      } catch (error) {
+        // Ignore errors (like 404s), as long as the request was sent, the server wakes up.
+        console.log("Keep-alive ping sent (error ignored)");
+      }
+    };
+
+    // Ping immediately on load
+    pingBackend();
+
+    // Set interval for 14 minutes (14 * 60 * 1000 ms)
+    const intervalId = setInterval(pingBackend, 14 * 60 * 1000);
+
+    // Cleanup on unmount
+    return () => clearInterval(intervalId);
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -125,6 +148,20 @@ export default function App() {
           payload.video_link = formData.video_link;
           payload.insta_reel = formData.insta_reel;
           break;
+
+        // --- ADDED TORAN AND TAG CASES HERE ---
+        case "toran":
+          endpoint = "/torans"; // Matches the standard plural route
+          payload.video_link = formData.video_link;
+          payload.insta_reel = formData.insta_reel;
+          break;
+        case "tag":
+          endpoint = "/tags"; // Matches the standard plural route
+          payload.video_link = formData.video_link;
+          payload.insta_reel = formData.insta_reel;
+          break;
+        // --------------------------------------
+
         case "workshop":
           endpoint = "/workshops";
           payload.date = formData.date;
@@ -148,7 +185,11 @@ export default function App() {
         body: JSON.stringify(payload),
       });
 
-      if (!response.ok) throw new Error("Failed to save data");
+      if (!response.ok) {
+        // Try to parse the error message from the backend
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to save data");
+      }
 
       setStatus({
         type: "success",
@@ -175,6 +216,7 @@ export default function App() {
         features: "",
       });
     } catch (error) {
+      console.error("Submission Error:", error);
       setStatus({ type: "error", message: error.message });
     } finally {
       setLoading(false);
@@ -211,6 +253,10 @@ export default function App() {
           <CategoryButton id="coinbox" label="Coin Box" />
           <CategoryButton id="gaddibox" label="Gaddi Box" />
           <CategoryButton id="resin" label="Resin" />
+          {/* --- ADDED BUTTONS --- */}
+          <CategoryButton id="toran" label="Toran" />
+          <CategoryButton id="tag" label="Tag" />
+          {/* --------------------- */}
           <CategoryButton id="workshop" label="Workshop" />
         </div>
 
