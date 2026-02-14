@@ -23,23 +23,21 @@ const TAGS_LIST = [
 ];
 
 export default function App() {
-  // --- STATE ---
-  // Options: 'envelope', 'scrapbook', 'coinbox', 'gaddibox', 'resin', 'workshop'
   const [modelType, setModelType] = useState("envelope");
   const [status, setStatus] = useState({ type: "", message: "" });
   const [loading, setLoading] = useState(false);
 
-  // Unified Form State
+  // Price is now a string as requested
   const [formData, setFormData] = useState({
     title: "",
     price: "",
     description: "",
     image: "",
-    // Product Specific
+    image2: "",
+    image3: "",
     tags: [],
     video_link: "",
     insta_reel: "",
-    // Workshop Specific
     date: "",
     time: "",
     locationName: "",
@@ -49,13 +47,10 @@ export default function App() {
     features: "",
   });
 
-  // --- LOGIC HELPERS ---
   const isWorkshop = modelType === "workshop";
   const isEnvelope = modelType === "envelope";
-  // Products are everything except workshops
   const isProduct = !isWorkshop;
 
-  // --- HANDLERS ---
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -78,15 +73,31 @@ export default function App() {
     setStatus({ type: "", message: "" });
 
     try {
+      // 1. VALIDATION LOGIC
+      const hasImage = formData.image || formData.image2 || formData.image3;
+      const hasMedia = hasImage || formData.video_link || formData.insta_reel;
+
+      if (!hasImage) {
+        throw new Error("At least one image link must be provided.");
+      }
+
+      if (!hasMedia) {
+        throw new Error(
+          "At least one media type (Image, Video Link, or Insta Reel) must be provided.",
+        );
+      }
+
       let endpoint = "";
+      // Price is sent as a string
       let payload = {
         title: formData.title,
-        price: Number(formData.price),
+        price: formData.price,
         description: formData.description,
         image: formData.image,
+        image2: formData.image2,
+        image3: formData.image3,
       };
 
-      // 1. DETERMINE ENDPOINT & SPECIFIC DATA
       switch (modelType) {
         case "envelope":
           endpoint = "/envelope";
@@ -100,17 +111,17 @@ export default function App() {
           payload.insta_reel = formData.insta_reel;
           break;
         case "coinbox":
-          endpoint = "/coin"; // Adjust API endpoint as needed
+          endpoint = "/coin";
           payload.video_link = formData.video_link;
           payload.insta_reel = formData.insta_reel;
           break;
         case "gaddibox":
-          endpoint = "/gaddi"; // Adjust API endpoint as needed
+          endpoint = "/gaddi";
           payload.video_link = formData.video_link;
           payload.insta_reel = formData.insta_reel;
           break;
         case "resin":
-          endpoint = "/resin"; // Adjust API endpoint as needed
+          endpoint = "/resin";
           payload.video_link = formData.video_link;
           payload.insta_reel = formData.insta_reel;
           break;
@@ -131,16 +142,6 @@ export default function App() {
           throw new Error("Invalid Type Selected");
       }
 
-      // 2. VALIDATION: VIDEO LINKS (For all products)
-      if (isProduct) {
-        if (!payload.video_link && !payload.insta_reel) {
-          throw new Error(
-            "Please provide at least one: Video Link OR Instagram Reel.",
-          );
-        }
-      }
-
-      // 3. SEND REQUEST
       const response = await fetch(`${API_BASE_URL}${endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -154,12 +155,14 @@ export default function App() {
         message: `Successfully added to ${modelType.toUpperCase()}!`,
       });
 
-      // Clear Form
+      // Reset Form
       setFormData({
         title: "",
         price: "",
         description: "",
         image: "",
+        image2: "",
+        image3: "",
         tags: [],
         video_link: "",
         insta_reel: "",
@@ -178,7 +181,6 @@ export default function App() {
     }
   };
 
-  // --- RENDER HELPERS ---
   const CategoryButton = ({ id, label }) => (
     <button
       type="button"
@@ -196,7 +198,6 @@ export default function App() {
   return (
     <div className="min-h-screen bg-gray-50 flex justify-center py-12 px-4 font-sans text-gray-900">
       <div className="w-full max-w-2xl bg-white p-8 rounded shadow-sm border border-gray-200">
-        {/* HEADER */}
         <div className="mb-8 border-b pb-4">
           <h1 className="text-2xl font-bold tracking-tight">Add New Item</h1>
           <p className="text-sm text-gray-500 mt-1">
@@ -204,10 +205,6 @@ export default function App() {
           </p>
         </div>
 
-        {/* 1. SELECT TYPE */}
-        <label className="block text-xs font-bold uppercase tracking-wide mb-3">
-          Select Category
-        </label>
         <div className="grid grid-cols-3 gap-3 mb-8">
           <CategoryButton id="envelope" label="Envelope" />
           <CategoryButton id="scrapbook" label="Scrapbook" />
@@ -217,9 +214,7 @@ export default function App() {
           <CategoryButton id="workshop" label="Workshop" />
         </div>
 
-        {/* 2. FORM */}
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* COMMON FIELDS (Title, Price, Desc, Image) */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="md:col-span-2">
               <label className="block text-sm font-semibold mb-2">Title</label>
@@ -229,37 +224,70 @@ export default function App() {
                 type="text"
                 value={formData.title}
                 onChange={handleChange}
-                className="w-full border border-gray-300 rounded p-3 focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
+                className="w-full border border-gray-300 rounded p-3 focus:outline-none focus:ring-1 focus:ring-black"
               />
             </div>
 
             <div>
               <label className="block text-sm font-semibold mb-2">
-                Price (₹)
+                Price (String)
               </label>
               <input
                 required
                 name="price"
-                type="number"
+                type="text"
+                placeholder="e.g. 500 or 500-1000"
                 value={formData.price}
                 onChange={handleChange}
-                className="w-full border border-gray-300 rounded p-3 focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
+                className="w-full border border-gray-300 rounded p-3 focus:outline-none focus:ring-1 focus:ring-black"
               />
             </div>
 
-            <div className="md:col-span-2">
-              <label className="block text-sm font-semibold mb-2">
-                Image Link
-              </label>
-              <input
-                required
-                name="image"
-                type="text"
-                placeholder="https://drive.google.com/file/d/1yMd98iEWmxh1-F9owqGv65ZDrOiubWYO/view?usp=sharing"
-                value={formData.image}
-                onChange={handleChange}
-                className="w-full border border-gray-300 rounded p-3 focus:outline-none focus:ring-1 focus:ring-black focus:border-black text-sm text-gray-600"
-              />
+            <div className="md:col-span-2 space-y-4">
+              <div className="bg-blue-50 p-3 rounded text-xs text-blue-700 font-medium">
+                Note: At least one Image Link is mandatory.
+              </div>
+              <div>
+                <label className="block text-sm font-semibold mb-2">
+                  Image Link 1
+                </label>
+                <input
+                  name="image"
+                  type="text"
+                  placeholder="Primary Image URL"
+                  value={formData.image}
+                  onChange={handleChange}
+                  className="w-full border border-gray-300 rounded p-3 focus:outline-none focus:ring-1 focus:ring-black text-sm"
+                />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold mb-2">
+                    Image Link 2
+                  </label>
+                  <input
+                    name="image2"
+                    type="text"
+                    placeholder="Secondary Image URL"
+                    value={formData.image2}
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 rounded p-3 focus:outline-none focus:ring-1 focus:ring-black text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold mb-2">
+                    Image Link 3
+                  </label>
+                  <input
+                    name="image3"
+                    type="text"
+                    placeholder="Third Image URL"
+                    value={formData.image3}
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 rounded p-3 focus:outline-none focus:ring-1 focus:ring-black text-sm"
+                  />
+                </div>
+              </div>
             </div>
 
             <div className="md:col-span-2">
@@ -272,54 +300,42 @@ export default function App() {
                 rows={4}
                 value={formData.description}
                 onChange={handleChange}
-                className="w-full border border-gray-300 rounded p-3 focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
+                className="w-full border border-gray-300 rounded p-3 focus:outline-none focus:ring-1 focus:ring-black"
               />
             </div>
           </div>
 
           <hr className="border-gray-100" />
 
-          {/* PRODUCT SPECIFIC (Video Links) - Renders for Envelope, Scrapbook, Coin, Gaddi, Resin */}
           {isProduct && (
-            <div className="space-y-4">
-              <div className="bg-gray-50 p-4 border border-gray-200 rounded text-sm text-gray-700">
-                <span className="font-bold block mb-1">
-                  Video Requirements:
-                </span>
-                Please provide at least one: <strong>Video Link</strong> OR{" "}
-                <strong>Insta Reel</strong>.
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-semibold mb-2">
+                  Video Link
+                </label>
+                <input
+                  name="video_link"
+                  type="text"
+                  value={formData.video_link}
+                  onChange={handleChange}
+                  className="w-full border border-gray-300 rounded p-3 focus:outline-none focus:ring-1 focus:ring-black"
+                />
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-semibold mb-2">
-                    Video Link (YouTube/Drive)
-                  </label>
-                  <input
-                    name="video_link"
-                    type="text"
-                    value={formData.video_link}
-                    onChange={handleChange}
-                    className="w-full border border-gray-300 rounded p-3 focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold mb-2">
-                    Insta Reel URL
-                  </label>
-                  <input
-                    name="insta_reel"
-                    type="text"
-                    value={formData.insta_reel}
-                    onChange={handleChange}
-                    className="w-full border border-gray-300 rounded p-3 focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
-                  />
-                </div>
+              <div>
+                <label className="block text-sm font-semibold mb-2">
+                  Insta Reel URL
+                </label>
+                <input
+                  name="insta_reel"
+                  type="text"
+                  value={formData.insta_reel}
+                  onChange={handleChange}
+                  className="w-full border border-gray-300 rounded p-3 focus:outline-none focus:ring-1 focus:ring-black"
+                />
               </div>
             </div>
           )}
 
-          {/* ENVELOPE SPECIFIC (Tags) */}
           {isEnvelope && (
             <div className="space-y-3">
               <label className="block text-sm font-semibold">Select Tags</label>
@@ -329,11 +345,7 @@ export default function App() {
                     key={tag}
                     type="button"
                     onClick={() => toggleTag(tag)}
-                    className={`px-3 py-1.5 text-sm rounded border transition-colors ${
-                      formData.tags.includes(tag)
-                        ? "bg-black text-white border-black"
-                        : "bg-white text-gray-700 border-gray-300 hover:border-black"
-                    }`}
+                    className={`px-3 py-1.5 text-sm rounded border transition-colors ${formData.tags.includes(tag) ? "bg-black text-white border-black" : "bg-white text-gray-700 border-gray-300 hover:border-black"}`}
                   >
                     {tag}
                   </button>
@@ -342,7 +354,6 @@ export default function App() {
             </div>
           )}
 
-          {/* WORKSHOP SPECIFIC */}
           {isWorkshop && (
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -356,7 +367,7 @@ export default function App() {
                     placeholder="e.g. Oct 24, 2024"
                     value={formData.date}
                     onChange={handleChange}
-                    className="w-full border border-gray-300 rounded p-3 focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
+                    className="w-full border border-gray-300 rounded p-3"
                   />
                 </div>
                 <div>
@@ -369,11 +380,10 @@ export default function App() {
                     placeholder="e.g. 2:00 PM - 5:00 PM"
                     value={formData.time}
                     onChange={handleChange}
-                    className="w-full border border-gray-300 rounded p-3 focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
+                    className="w-full border border-gray-300 rounded p-3"
                   />
                 </div>
               </div>
-
               <div>
                 <label className="block text-sm font-semibold mb-2">
                   Location Name
@@ -381,83 +391,34 @@ export default function App() {
                 <input
                   name="locationName"
                   type="text"
-                  placeholder="e.g. The Art Studio"
                   value={formData.locationName}
                   onChange={handleChange}
-                  className="w-full border border-gray-300 rounded p-3 focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
+                  className="w-full border border-gray-300 rounded p-3"
                 />
               </div>
-
               <div>
                 <label className="block text-sm font-semibold mb-2">
-                  Full Address
-                </label>
-                <input
-                  name="locationAddress"
-                  type="text"
-                  value={formData.locationAddress}
-                  onChange={handleChange}
-                  className="w-full border border-gray-300 rounded p-3 focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-semibold mb-2">
-                    Map Embed URL (src only)
-                  </label>
-                  <input
-                    name="mapEmbedUrl"
-                    type="text"
-                    value={formData.mapEmbedUrl}
-                    onChange={handleChange}
-                    className="w-full border border-gray-300 rounded p-3 focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold mb-2">
-                    Google Maps Link
-                  </label>
-                  <input
-                    name="mapLink"
-                    type="text"
-                    value={formData.mapLink}
-                    onChange={handleChange}
-                    className="w-full border border-gray-300 rounded p-3 focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold mb-2">
-                  Features (Comma Separated)
+                  Features
                 </label>
                 <input
                   name="features"
                   type="text"
-                  placeholder="e.g. Beginners friendly, Snacks included"
                   value={formData.features}
                   onChange={handleChange}
-                  className="w-full border border-gray-300 rounded p-3 focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
+                  className="w-full border border-gray-300 rounded p-3"
                 />
               </div>
             </div>
           )}
 
-          {/* STATUS & BUTTON */}
           <div className="pt-4">
             {status.message && (
               <div
-                className={`mb-4 p-3 text-sm text-center rounded font-medium ${
-                  status.type === "error"
-                    ? "bg-red-100 text-red-800"
-                    : "bg-green-100 text-green-800"
-                }`}
+                className={`mb-4 p-3 text-sm text-center rounded font-medium ${status.type === "error" ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800"}`}
               >
                 {status.message}
               </div>
             )}
-
             <button
               type="submit"
               disabled={loading}
