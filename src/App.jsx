@@ -2,7 +2,7 @@ import React, { useState } from "react";
 
 // --- CONFIGURATION ---
 const API_BASE_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+  import.meta.env.VITE_API_URL || "https://craftology-backend.onrender.com/api";
 
 const TAGS_LIST = [
   "Handcrafted",
