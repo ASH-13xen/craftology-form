@@ -6,21 +6,82 @@ const API_BASE_URL =
   import.meta.env.VITE_API_URL || "https://craftology-backend.onrender.com/api";
 
 const TAGS_LIST = [
-  "Handcrafted",
-  "Floral",
-  "Modern",
-  "Traditional",
-  "Minimalist",
-  "Royal",
-  "Packet Envelope",
-  "Diwali",
-  "Raksha Bandhan",
-  "Wedding",
-  "Birthday",
+  // Price-Based Categories
+  "Under ₹50 (Budget Picks)",
+  "₹50 – ₹100",
+  "₹100 – ₹250",
+  "₹250 – ₹500",
+  "₹500+ (Luxury Collection)",
+  "Bulk Order Deals",
+  "Premium Custom Range",
+
+  // Color-Based Categories
+  "Pastel Collection (Blush Pink, Mint, Lavender)",
+  "Royal Tones (Maroon, Emerald, Navy Blue)",
+  "Classic Neutrals (Beige, Ivory, White, Gold)",
+  "Vibrant & Bright (Yellow, Orange, Rani Pink)",
+  "Monochrome (Black & White)",
+  "Metallic Shades (Gold Foil, Rose Gold, Silver)",
+  "Multicolor / Printed",
+
+  // Design-Based Categories
+  "Minimal & Elegant",
+  "Floral Designs",
+  "Traditional Indian Motifs",
+  "Modern Contemporary",
+  "Embroidered / Fabric Envelopes",
+  "Laser Cut Designs",
+  "Foil Printed / Embossed",
+  "Resin Art Envelopes",
+  "Illustrated / Hand-Painted",
+  "Textured Paper Finish",
+
+  // Theme-Based Categories
+  "Royal / Maharaja Theme",
+  "Boho / Rustic Theme",
+  "Vintage Theme",
+  "Luxury Luxe Theme",
+  "Festive Glam Theme",
+  "Nature-Inspired Theme",
+  "Cultural / Ethnic Theme",
+  "Modern Chic Theme",
+
+  // Occasion-Based Categories
+  "Wedding Envelopes",
+  "Shagun Envelopes",
+  "Invitation Inserts",
+  "Bride/Groom Special",
+  "Festive Envelopes",
+  "Diwali Collection",
+  "Rakhi Special",
+  "Eid Collection",
+  "Christmas Collection",
+  "Gifting Envelopes",
+  "Cash Gift Envelopes",
+  "Money Holders",
+  "Corporate Envelopes",
+  "Branding Envelopes",
+  "Bulk Corporate Gifting",
+  "Special Occasions",
+  "Birthday Envelopes",
   "Anniversary",
   "Baby Shower",
-  "Shagun",
-  "House Warming",
+  "Housewarming",
+
+  // Premium / USP-Based Categories
+  "Handmade Luxury Collection",
+  "Customized with Name/Initials",
+  "Eco-Friendly / Sustainable",
+  "Limited Edition Designs",
+  "Signature Craftology Collection",
+  "Designer Picks",
+
+  // Customization Filters
+  "Add Name / Initials",
+  "Add Logo (Corporate)",
+  "Color Customization",
+  "Design Customization",
+  "Bulk Order Customization"
 ];
 
 export default function App() {
