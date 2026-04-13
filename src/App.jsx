@@ -138,9 +138,12 @@ export default function App() {
     setLoading(true);
     try {
       let endpoint = _getEndpointConfig();
-      const response = await fetch(`${API_BASE_URL}${endpoint}`);
+      const cleanBase = API_BASE_URL.replace(/\/$/, "");
+      const response = await fetch(`${cleanBase}${endpoint}`);
       const data = await response.json();
-      if (data.success) {
+      if (Array.isArray(data)) {
+        setItems(data);
+      } else if (data.success) {
         setItems(data.data);
       } else {
         setItems([]);
@@ -204,15 +207,36 @@ export default function App() {
   };
 
   const handleDelete = async (id) => {
+    // Safety check in case ID is completely missing from the backend response
+    if (!id) {
+        setStatus({ type: "error", message: "Cannot delete: Item ID is missing from the database." });
+        return;
+    }
+
     if (!window.confirm("Are you sure you want to delete this item?")) return;
     setLoading(true);
     setStatus({ type: "", message: "" });
+    
     try {
       let endpoint = _getEndpointConfig();
-      const response = await fetch(`${API_BASE_URL}${endpoint}/${id}`, {
+      const cleanBase = API_BASE_URL.replace(/\/$/, "");
+      const targetUrl = `${cleanBase}${endpoint}/${id}`;
+      
+      const response = await fetch(targetUrl, {
         method: "DELETE",
       });
-      if (!response.ok) throw new Error("Failed to delete data");
+      
+      if (!response.ok) {
+        // Attempt to parse the server error message
+        let errorMsg = "Failed to delete data";
+        try {
+            const errorData = await response.json();
+            errorMsg = errorData.message || `Server Error: ${response.status}`;
+        } catch(e) {
+            errorMsg = `Server Error: ${response.status} ${response.statusText}`;
+        }
+        throw new Error(errorMsg);
+      }
       
       setStatus({ type: "success", message: `Successfully deleted item!` });
       fetchItems(); // Refresh list
@@ -278,7 +302,11 @@ export default function App() {
       }
 
       const method = viewMode === "add" ? "POST" : "PUT";
-      const finalUrl = viewMode === "add" ? `${API_BASE_URL}${endpoint}` : `${API_BASE_URL}${endpoint}/${editingItem._id}`;
+      const cleanBase = API_BASE_URL.replace(/\/$/, "");
+      
+      // Handle the ID correctly for PUT requests depending on the DB schema
+      const editId = editingItem ? (editingItem._id || editingItem.id) : null;
+      const finalUrl = viewMode === "add" ? `${cleanBase}${endpoint}` : `${cleanBase}${endpoint}/${editId}`;
 
       const response = await fetch(finalUrl, {
         method,
@@ -384,8 +412,12 @@ export default function App() {
                 <p className="text-center text-gray-500 py-8">No items found for {modelType}.</p>
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {items.map((item) => (
-                        <div key={item._id} className="border border-gray-200 rounded p-4 flex flex-col items-center hover:shadow bg-white">
+                    {items.map((item, index) => {
+                        // Dynamically resolve the ID to handle different database structures
+                        const itemId = item._id || item.id;
+                        
+                        return (
+                        <div key={itemId || `fallback-${index}`} className="border border-gray-200 rounded p-4 flex flex-col items-center hover:shadow bg-white">
                             {item.image ? (
                                 <img src={item.image} alt={item.title} className="h-32 w-full object-cover rounded mb-4" />
                             ) : (
@@ -397,12 +429,12 @@ export default function App() {
                                 <button type="button" onClick={() => handleEditClick(item)} className="flex-1 bg-gray-900 text-white py-2 rounded text-xs font-bold hover:bg-gray-800">
                                     EDIT
                                 </button>
-                                <button type="button" onClick={() => handleDelete(item._id)} className="flex-1 bg-red-100 text-red-700 py-2 rounded text-xs font-bold hover:bg-red-200 border border-red-200">
+                                <button type="button" onClick={() => handleDelete(itemId)} className="flex-1 bg-red-100 text-red-700 py-2 rounded text-xs font-bold hover:bg-red-200 border border-red-200">
                                     DELETE
                                 </button>
                             </div>
                         </div>
-                    ))}
+                    )})}
                 </div>
             )}
           </div>
